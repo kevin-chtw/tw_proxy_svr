@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/kevin-chtw/tw_proxy_svr/proto"
+	"github.com/kevin-chtw/tw_proto/proto"
 	"github.com/sirupsen/logrus"
 	pitaya "github.com/topfreegames/pitaya/v3/pkg"
 	"github.com/topfreegames/pitaya/v3/pkg/component"
@@ -22,6 +22,10 @@ func (s *AccountSvc) Register(ctx context.Context, req *proto.RegisterRequest) (
 	logrus.Debugf("register request: %v", req)
 
 	rsp := &proto.CommonResponse{Err: proto.ErrCode_OK}
+	err := s.app.RPC(ctx, "lobby.account.register", rsp, req)
+	if err != nil {
+		return nil, err
+	}
 
 	return rsp, nil
 }
