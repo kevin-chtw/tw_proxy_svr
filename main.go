@@ -3,13 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"strings"
 
-	"github.com/kevin-chtw/tw_proxy_svr/service"
 	"github.com/sirupsen/logrus"
 	pitaya "github.com/topfreegames/pitaya/v3/pkg"
 	"github.com/topfreegames/pitaya/v3/pkg/acceptor"
-	"github.com/topfreegames/pitaya/v3/pkg/component"
 	"github.com/topfreegames/pitaya/v3/pkg/config"
 )
 
@@ -29,12 +26,5 @@ func main() {
 
 	defer app.Shutdown()
 
-	logrus.Infof("Pitaya server of type %s started on port %d", serverType, *port)
-	initServices()
 	app.Start()
-}
-
-func initServices() {
-	accountSvc := service.NewAccountSvc(app)
-	app.Register(accountSvc, component.WithName("account"), component.WithNameFunc(strings.ToLower))
 }
