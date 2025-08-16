@@ -5,11 +5,13 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/kevin-chtw/tw_common/utils"
 	"github.com/kevin-chtw/tw_proto/sproto"
 	"github.com/sirupsen/logrus"
 	pitaya "github.com/topfreegames/pitaya/v3/pkg"
 	"github.com/topfreegames/pitaya/v3/pkg/acceptor"
 	"github.com/topfreegames/pitaya/v3/pkg/config"
+	"github.com/topfreegames/pitaya/v3/pkg/logger"
 	"github.com/topfreegames/pitaya/v3/pkg/modules"
 	"github.com/topfreegames/pitaya/v3/pkg/session"
 )
@@ -18,7 +20,7 @@ var app pitaya.Pitaya
 
 func OnSessionClose(s session.Session) {
 	uid := s.UID()
-	logrus.Infof("session closed: %s", uid)
+	logger.Log.Infof("session closed: %s", uid)
 	module, err := app.GetModule("matchingstorage")
 	if err != nil {
 		return
@@ -36,12 +38,13 @@ func OnSessionClose(s session.Session) {
 			},
 		},
 	}
-	app.RPCTo(context.Background(), serverId, "match.player.offline", nil, req)
+	rsp := &sproto.Proxy2MatchAck{}
+	app.RPCTo(context.Background(), serverId, "match.player.offline", rsp, req)
 }
 
 func OnAfterSessionBind(ctx context.Context, s session.Session) error {
 	uid := s.UID()
-	logrus.Infof("session binded: %s", uid)
+	logger.Log.Infof("session binded: %s", uid)
 	module, err := app.GetModule("matchingstorage")
 	if err != nil {
 		return nil
@@ -59,16 +62,18 @@ func OnAfterSessionBind(ctx context.Context, s session.Session) error {
 			},
 		},
 	}
-	app.RPCTo(context.Background(), serverId, "match.player.online", nil, req)
+	rsp := &sproto.Proxy2MatchAck{}
+	if err := app.RPCTo(ctx, serverId, "match.player.online", rsp, req); err != nil {
+		logger.Log.Error(err)
+	}
 	return nil
 }
 
 func main() {
 	serverType := "proxy"
+	pitaya.SetLogger(utils.Logger(logrus.DebugLevel))
 	port := flag.Int("port", 3250, "port to listen on")
 	flag.Parse()
-
-	logrus.SetLevel(logrus.DebugLevel)
 
 	config := config.NewDefaultPitayaConfig()
 	// config.Cluster.RPC.Client.Nats.Connect = "nats://192.168.182.128:4222"
