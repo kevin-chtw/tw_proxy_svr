@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
+	"github.com/kevin-chtw/tw_common/storage"
 	"github.com/kevin-chtw/tw_proto/sproto"
 	"github.com/topfreegames/pitaya/v3/pkg/logger"
-	"github.com/topfreegames/pitaya/v3/pkg/modules"
 	"github.com/topfreegames/pitaya/v3/pkg/session"
 )
 
@@ -16,21 +16,15 @@ func OnSessionClose(s session.Session) {
 	if err != nil {
 		return
 	}
-	ms := module.(*modules.ETCDBindingStorage)
-	serverId, err := ms.GetUserFrontendID(uid, "match")
-	if err != nil || serverId == "" {
+	ms := module.(*storage.ETCDMatching)
+	matching, err := ms.Get(uid)
+	if err != nil || matching == nil {
 		return
 	}
 
-	req := &sproto.Proxy2MatchReq{
-		Req: &sproto.Proxy2MatchReq_OfflineReq{
-			OfflineReq: &sproto.OfflineReq{
-				Uid: uid,
-			},
-		},
-	}
-	rsp := &sproto.Proxy2MatchAck{}
-	app.RPCTo(context.Background(), serverId, "match.player.offline", rsp, req)
+	req := &sproto.NetStateReq{Uid: uid, Online: false}
+	rsp := &sproto.NetStateAck{}
+	app.RPCTo(context.Background(), matching.ServerId, matching.ServerType+".player.net", rsp, req)
 }
 
 func OnAfterSessionBind(ctx context.Context, s session.Session) error {
@@ -40,21 +34,15 @@ func OnAfterSessionBind(ctx context.Context, s session.Session) error {
 	if err != nil {
 		return nil
 	}
-	ms := module.(*modules.ETCDBindingStorage)
-	serverId, err := ms.GetUserFrontendID(uid, "match")
-	if err != nil || serverId == "" {
+	ms := module.(*storage.ETCDMatching)
+	matching, err := ms.Get(uid)
+	if err != nil || matching == nil {
 		return nil
 	}
 
-	req := &sproto.Proxy2MatchReq{
-		Req: &sproto.Proxy2MatchReq_OnlineReq{
-			OnlineReq: &sproto.OnlineReq{
-				Uid: uid,
-			},
-		},
-	}
-	rsp := &sproto.Proxy2MatchAck{}
-	if err := app.RPCTo(ctx, serverId, "match.player.online", rsp, req); err != nil {
+	req := &sproto.NetStateReq{Uid: uid, Online: true}
+	rsp := &sproto.NetStateAck{}
+	if err := app.RPCTo(ctx, matching.ServerId, matching.ServerType+".player.session", rsp, req); err != nil {
 		logger.Log.Error(err)
 	}
 	return nil

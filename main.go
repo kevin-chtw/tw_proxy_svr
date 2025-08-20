@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/kevin-chtw/tw_common/storage"
 	"github.com/kevin-chtw/tw_common/utils"
 	"github.com/sirupsen/logrus"
 	pitaya "github.com/topfreegames/pitaya/v3/pkg"
 	"github.com/topfreegames/pitaya/v3/pkg/acceptor"
 	"github.com/topfreegames/pitaya/v3/pkg/config"
-	"github.com/topfreegames/pitaya/v3/pkg/modules"
 )
 
 var app pitaya.Pitaya
@@ -32,7 +32,7 @@ func main() {
 	builder.SessionPool.OnAfterSessionBind(OnAfterSessionBind)
 	app = builder.Build()
 	defer app.Shutdown()
-	bs := modules.NewETCDBindingStorage(builder.Server, builder.SessionPool, builder.Config.Modules.BindingStorage.Etcd)
+	bs := storage.NewETCDMatching(builder.Server, builder.Config.Modules.BindingStorage.Etcd)
 	app.RegisterModule(bs, "matchingstorage")
 
 	app.Start()
