@@ -10,6 +10,7 @@ import (
 	pitaya "github.com/topfreegames/pitaya/v3/pkg"
 	"github.com/topfreegames/pitaya/v3/pkg/acceptor"
 	"github.com/topfreegames/pitaya/v3/pkg/config"
+	"github.com/topfreegames/pitaya/v3/pkg/serialize"
 )
 
 var app pitaya.Pitaya
@@ -21,6 +22,7 @@ func main() {
 	flag.Parse()
 
 	config := config.NewDefaultPitayaConfig()
+	config.SerializerType = uint16(serialize.PROTOBUF)
 	// config.Cluster.RPC.Client.Nats.Connect = "nats://192.168.182.128:4222"
 	// config.Cluster.RPC.Server.Nats.Connect = "nats://192.168.182.128:4222"
 	// config.Cluster.SD.Etcd.Endpoints = []string{"http://192.168.182.128:2379"}
