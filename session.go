@@ -12,38 +12,30 @@ import (
 func OnSessionClose(s session.Session) {
 	uid := s.UID()
 	logger.Log.Infof("session closed: %s", uid)
-	module, err := app.GetModule("matchingstorage")
-	if err != nil {
-		return
-	}
-	ms := module.(*storage.ETCDMatching)
-	matching, err := ms.Get(uid)
-	if err != nil || matching == nil {
-		return
-	}
-
-	req := &sproto.NetStateReq{Uid: uid, Online: false}
-	rsp := &sproto.NetStateAck{}
-	app.RPCTo(context.Background(), matching.ServerId, matching.ServerType+".player.net", rsp, req)
+	go sendNetState(uid, false)
 }
 
 func OnAfterSessionBind(ctx context.Context, s session.Session) error {
 	uid := s.UID()
 	logger.Log.Infof("session binded: %s", uid)
+	go sendNetState(uid, true)
+	return nil
+}
+
+func sendNetState(uid string, online bool) {
 	module, err := app.GetModule("matchingstorage")
 	if err != nil {
-		return nil
+		logger.Log.Errorf("get module error: %v", err)
+		return
 	}
 	ms := module.(*storage.ETCDMatching)
 	matching, err := ms.Get(uid)
 	if err != nil || matching == nil {
-		return nil
+		logger.Log.Errorf("get matching error: %v", err)
+		return
 	}
 
-	req := &sproto.NetStateReq{Uid: uid, Online: true}
+	req := &sproto.NetStateReq{Uid: uid, Online: online}
 	rsp := &sproto.NetStateAck{}
-	if err := app.RPCTo(ctx, matching.ServerId, matching.ServerType+".player.session", rsp, req); err != nil {
-		logger.Log.Error(err)
-	}
-	return nil
+	app.RPCTo(context.Background(), matching.ServerId, matching.ServerType+".player.net", rsp, req)
 }
