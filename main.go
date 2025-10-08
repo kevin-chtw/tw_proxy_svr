@@ -23,6 +23,7 @@ func main() {
 
 	config := config.NewDefaultPitayaConfig()
 	config.SerializerType = uint16(serialize.PROTOBUF)
+	config.Handler.Messages.Compression = false
 	// config.Cluster.RPC.Client.Nats.Connect = "nats://192.168.182.128:4222"
 	// config.Cluster.RPC.Server.Nats.Connect = "nats://192.168.182.128:4222"
 	// config.Cluster.SD.Etcd.Endpoints = []string{"http://192.168.182.128:2379"}
