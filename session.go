@@ -31,7 +31,7 @@ func sendNetState(uid string, online bool) {
 	ms := module.(*storage.ETCDMatching)
 	matching, err := ms.Get(uid)
 	if err != nil || matching == nil {
-		logger.Log.Errorf("get matching error: %v", err)
+		logger.Log.Warnf("get matching error: %v", err)
 		return
 	}
 
