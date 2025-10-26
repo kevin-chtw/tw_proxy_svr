@@ -7,6 +7,7 @@ import (
 	"github.com/kevin-chtw/tw_proto/sproto"
 	"github.com/topfreegames/pitaya/v3/pkg/logger"
 	"github.com/topfreegames/pitaya/v3/pkg/session"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func OnSessionClose(s session.Session) {
@@ -35,7 +36,15 @@ func sendNetState(uid string, online bool) {
 		return
 	}
 
-	req := &sproto.NetStateReq{Uid: uid, Online: online}
-	rsp := &sproto.NetStateAck{}
-	app.RPCTo(context.Background(), matching.ServerId, matching.ServerType+".player.net", rsp, req)
+	msg := &sproto.NetStateReq{Uid: uid, Online: online}
+	data, err := anypb.New(msg)
+	if err != nil {
+		logger.Log.Errorf("failed to marshal net state req: %v", err)
+	}
+	req := &sproto.MatchReq{
+		Matchid: matching.MatchId,
+		Req:     data,
+	}
+	rsp := &sproto.MatchAck{}
+	app.RPCTo(context.Background(), matching.ServerId, matching.ServerType+".remote.message", rsp, req)
 }
